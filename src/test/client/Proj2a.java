@@ -30,6 +30,9 @@ public class Proj2a implements EntryPoint, ClickHandler
    ArrayList<MyStudent> students;
    JsArray<Student> jsonData;
    Button addButton = new Button("Add");
+   Button deleteButton = new Button("Delete");
+   Button editButton = new Button("Edit");
+   MyStudent selectedStudent = null;
    Button addStudentButton = new Button("Add Student");
    TextBox fnBox = new TextBox();
    TextBox lnBox = new TextBox();
@@ -55,6 +58,8 @@ public class Proj2a implements EntryPoint, ClickHandler
       String url = baseURL + "/students/index.json";
       getRequest(url,"getStudents");
       addButton.addClickHandler(this);
+      deleteButton.addClickHandler(this);
+      editButton.addClickHandler(this);
       addStudentButton.addClickHandler(this);
       RootPanel.get().add(mainPanel);
       //setupAddStudent();
@@ -77,6 +82,19 @@ public class Proj2a implements EntryPoint, ClickHandler
 	   }
 	   else if (source == addButton) {
 		   setupAddStudent();
+	   }
+	   else if (source == deleteButton) {
+	   	String url = baseURL + "/students/deleteStudent";
+	   	String postData = URL.encode("student_id") + "=" +
+	   		URL.encode("" + selectedStudent.id);
+	   	postRequest(url,postData,"deleteStudent");
+	   }
+	   else if (source == editButton) {
+	   	String url = baseURL + "students/editStudent";
+	   	String postData = URL.encode("student_id") + "=" + 
+	   		URL.encode("" + selectedStudent.id);
+	   	postRequest(url,postData,"editStudent");
+	   	
 	   }
    }
    public void getRequest(String url, final String getType) {
@@ -121,14 +139,16 @@ public class Proj2a implements EntryPoint, ClickHandler
 	        public void onResponseReceived(final Request request,
 	           final Response response)
 	        {
-	           if (postType.equals("postStudent")) {
+	           if (postType.equals("postStudent") ||
+	           		postType.equals("deleteStudent") ||
+	           		postType.equals("editStudent")) {
 		          mainPanel.clear();
 		          String url = baseURL + "/students/index.json";
 		          getRequest(url,"getStudents");
-		       }
-		    }
+	           }
+		     }
          });
-      }
+       }
        catch (Exception e) {
          Window.alert(e.getMessage());
       }
@@ -174,7 +194,8 @@ public class Proj2a implements EntryPoint, ClickHandler
     			  {
     				  MyStudent selected = selectionModel.getSelectedObject();
     				  if (selected != null) {
-    					  Window.alert("id: " + selected.id);
+    					  selectedStudent = selected;
+    					  //Window.alert("id: " + selected.id);
     				  }
     			  }
     		  });
@@ -182,7 +203,13 @@ public class Proj2a implements EntryPoint, ClickHandler
       table.addColumn(lnameCol, "Last Name");
       table.setRowCount(students.size(),true);
       table.setRowData(0,students);
-      mainPanel.add(addButton);
+      HorizontalPanel buttonRow = new HorizontalPanel();
+      buttonRow.add(addButton);
+      buttonRow.add(deleteButton);
+      buttonRow.add(editButton);
+      mainPanel.add(buttonRow);
+      //mainPanel.add(addButton);
+      //mainPanel.add(deleteButton);
       mainPanel.add(table);
    } // end showStudents()
    private void setupAddStudent()
