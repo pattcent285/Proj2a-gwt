@@ -1,27 +1,28 @@
 package test.client;
 
+import java.util.ArrayList;
+
 import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.core.client.JsArray;
+import com.google.gwt.core.client.JsonUtils;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.http.client.Request;
 import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.Response;
-import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.core.client.JsonUtils;
-import java.util.ArrayList;
-import com.google.gwt.core.client.JsArray;
+import com.google.gwt.http.client.URL;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.TextColumn;
-import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SingleSelectionModel;
-import com.google.gwt.http.client.URL;
-import com.google.gwt.user.client.ui.VerticalPanel;
 
 public class Proj2a implements EntryPoint, ClickHandler
 {
@@ -34,6 +35,7 @@ public class Proj2a implements EntryPoint, ClickHandler
    Button editButton = new Button("Edit");
    MyStudent selectedStudent = null;
    Button addStudentButton = new Button("Add Student");
+   Button changeStudentButton = new Button("Submit Changes");
    TextBox fnBox = new TextBox();
    TextBox lnBox = new TextBox();
    TextBox majBox = new TextBox();
@@ -61,6 +63,7 @@ public class Proj2a implements EntryPoint, ClickHandler
       deleteButton.addClickHandler(this);
       editButton.addClickHandler(this);
       addStudentButton.addClickHandler(this);
+      changeStudentButton.addClickHandler(this);
       RootPanel.get().add(mainPanel);
       //setupAddStudent();
    }
@@ -90,11 +93,22 @@ public class Proj2a implements EntryPoint, ClickHandler
 	   	postRequest(url,postData,"deleteStudent");
 	   }
 	   else if (source == editButton) {
-	   	String url = baseURL + "students/editStudent";
-	   	String postData = URL.encode("student_id") + "=" + 
-	   		URL.encode("" + selectedStudent.id);
-	   	postRequest(url,postData,"editStudent");
-	   	
+	   	editStudent();
+	   }
+	   else if (source == changeStudentButton) {
+		   String url = baseURL + "/students/updateStudent";
+		   String postData = URL.encode("first_name") + "=" +
+		   URL.encode(fnBox.getText().trim()) + "&" +
+		   URL.encode("last_name") + "=" +
+		   URL.encode(lnBox.getText().trim()) + "&" +
+		   URL.encode("major") + "=" +
+		   URL.encode(majBox.getText().trim()) + "&" +
+		   URL.encode("student_id") + "=" + 
+		   URL.encode("" + selectedStudent.id);	   
+		fnBox.setText("");
+		lnBox.setText("");
+		majBox.setText("");
+		postRequest(url,postData,"editStudent");
 	   }
    }
    public void getRequest(String url, final String getType) {
@@ -184,6 +198,15 @@ public class Proj2a implements EntryPoint, ClickHandler
                return student.last_name;
             }
          };
+       TextColumn<MyStudent> majCol = 
+         new TextColumn<MyStudent>()
+         {
+            @Override
+            public String getValue(MyStudent student)
+            {
+               return student.major;
+            }
+         };  
       final SingleSelectionModel<MyStudent> selectionModel = 
     		  new SingleSelectionModel<MyStudent>();
       table.setSelectionModel(selectionModel);
@@ -201,6 +224,7 @@ public class Proj2a implements EntryPoint, ClickHandler
     		  });
       table.addColumn(fnameCol, "First Name");
       table.addColumn(lnameCol, "Last Name");
+      table.addColumn(majCol, "Major");
       table.setRowCount(students.size(),true);
       table.setRowData(0,students);
       HorizontalPanel buttonRow = new HorizontalPanel();
@@ -230,8 +254,36 @@ public class Proj2a implements EntryPoint, ClickHandler
 	   HorizontalPanel majRow = new HorizontalPanel();
 	   majRow.add(majLabel);
 	   majRow.add(majBox);
+	   addStudentPanel.add(majRow);
 	   addStudentPanel.add(addStudentButton);
 	   mainPanel.add(addStudentPanel);
+	   
+   }
+   private void editStudent()
+   {
+	   mainPanel.clear();
+	   VerticalPanel addStudentPanel = new VerticalPanel();
+	   Label fnLabel = new Label("First Name");
+	   HorizontalPanel fnRow = new HorizontalPanel();
+	   fnRow.add(fnLabel);
+	   fnRow.add(fnBox);
+	   fnBox.setText(selectedStudent.first_name);
+	   addStudentPanel.add(fnRow);
+	   Label lnLabel = new Label("Last Name");
+	   HorizontalPanel lnRow = new HorizontalPanel();
+	   lnRow.add(lnLabel);
+	   lnRow.add(lnBox);
+	   lnBox.setText(selectedStudent.last_name);
+	   addStudentPanel.add(lnRow);
+	   Label majLabel = new Label("Major");
+	   HorizontalPanel majRow = new HorizontalPanel();
+	   majRow.add(majLabel);
+	   majRow.add(majBox);
+	   majBox.setText(selectedStudent.major);
+	   addStudentPanel.add(majRow);
+	   addStudentPanel.add(changeStudentButton);
+	   mainPanel.add(addStudentPanel);
+	   
    }
    private JsArray<Student> getData(String json)
    {
